@@ -1,0 +1,18 @@
+language: node_js
+node_js:
+    - "stable"
+cache:
+    directories:
+        - node_modules
+script:
+    - npm test
+    - npm run build
+deploy:
+    provider: heroku
+    api-key:
+        secure: $HEROKU_API_KEY
+    skip_cleanup: true
+    app: iv1201-recruiter-client
+    local_dir: build
+    on:
+        repo: Moa-DB/recruiter_client
