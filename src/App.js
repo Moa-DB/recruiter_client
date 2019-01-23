@@ -1,28 +1,23 @@
 import React, { Component } from 'react';
-import logo from './logo.svg';
+import Header from './components/Header';
+import Footer from './components/Footer';
 import './App.css';
+import Auth from './components/Auth';
+//import {withRouter} from "react-router-dom";
 
+/**
+ * Wrapper class that adds Header and Footer to each page.
+ */
 class App extends Component {
-  render() {
-    return (
-      <div className="App">
-        <header className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <p>
-            OK Test A
-          </p>
-          <a
-            className="App-link"
-            href="https://reactjs.org"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Learn React
-          </a>
-        </header>
-      </div>
-    );
-  }
+    render() {
+        return (
+            <div className="App">
+                <Header />
+                <Auth/>
+                <Footer />
+            </div>
+        );
+    }
 }
-
 export default App;
+//export default withRouter(App); //TODO test to see if build works (change back if not???)
