@@ -1,18 +1,14 @@
 import React, { Component } from 'react';
-import Login from '../pages/Login';
-import Auth from '../components/Auth';
-import Protected from '../pages/Protected';
 
 /**
- * The Home page. Also point of authentication.
+ * The Home page.
  */
 class Home extends Component {
     render() {
         return (
             <div>
-                <Login/>
-                <Auth/>
-                <Protected/>
+                <h1>Welcome!</h1>
+                <p>On this web site you can manage job applications. Please register and log in to be able to manage applications.</p>
             </div>
         );
     }

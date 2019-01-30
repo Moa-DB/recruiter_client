@@ -1,8 +1,3 @@
 {
-  "server" : "https://iv1201-recruit-server.herokuapp.com",
-  "api" : {
-    "food" : "/applications",
-    "login" : "/login",
-    "loggedin" : "/loggedin"
-  }
+  "server" : "https://iv1201-recruit-server.herokuapp.com"
 }

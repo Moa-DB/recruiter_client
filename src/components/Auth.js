@@ -3,15 +3,18 @@ import {
     BrowserRouter as Router,
     Route,
     Redirect,
-    withRouter
 } from "react-router-dom";
-import Protected from '../pages/Protected';
+import Applications from '../pages/Applications';
 import Login from '../pages/Login';
+import Header from "./Header";
+import Footer from "./Footer";
+import Home from '../pages/Home';
 
 
 /**
- * Anyone can access public but when a user tries to access a protected page
- * they should be redirected to login
+ * This is where the "Router" which handles navigation is implemented and all the paths initiated.
+ * A header and a footer is always present. Anyone can access route but when a user tries to access a private route page
+ * they should be redirected to login.
  * @returns {*}
  * @constructor
  */
@@ -19,17 +22,18 @@ function Auth() {
     return (
         <Router>
             <div>
-                <AuthButton/>
-                <Route path="/public" component={Public}/>
+                <Header />
+                <Route path="/home" component={Home}/>
                 <Route path="/login" component={Login}/>
-                <PrivateRoute path='/protected' component={Protected} />
+                <PrivateRoute path='/applications' component={Applications} />
+                <Footer/>
             </div>
         </Router>
     )
 }
 
 /**
- * Set authenticated to true or false
+ * Set authenticated to true or false. Stores currently logged in username.
  *
  * @type {{user: string, isAuthenticated: boolean, authenticate(*=): void, signout(*=): void, getItems(*)}}
  */
@@ -37,38 +41,18 @@ export const auth = {
     user: "",
     isAuthenticated: false,
     authenticate(cb) {
-        this.isAuthenticated = true
-        setTimeout(cb, 100)
-
-        // this.getItems(cb)
+        this.isAuthenticated = true;
+        cb();
     },
     signout(cb) {
         this.user = ""
         this.isAuthenticated = false
-        setTimeout(cb, 100)
+        cb();
     },
     getItems(cb) {
 
     }
 }
-
-
-/**
- * Show logout button when logged in and the text You are not logged in when logged out
- * Uses withRouter since AuthButton is'nt rendered by React Router and we wont have history, location or match
- * But withRouter will re-render the component every time the route changes (which is what we want)
- */
-const AuthButton = withRouter(({ history }) => (
-    auth.isAuthenticated ? (
-        <p>
-            <button onClick={() => {
-                auth.signout(() => history.push('/'))
-            }}>Sign out</button>
-        </p>
-    ) : (
-        <p>You are not logged in.</p>
-    )
-))
 
 /**
  * Create a PrivateRoute with same API as Route
@@ -88,14 +72,5 @@ const PrivateRoute = ({ component: Component, ...rest }) => (
             }} /> )
     )} />
 )
-
-
-
-const Public = () =>
-    <div>
-        <h3>About this site</h3>
-        <span>Use this site to apply to jobs for...</span>
-        <span>You have to register an account to use this site</span>
-    </div>;
 
 export default Auth;
