@@ -46,14 +46,14 @@ class ApplicationsHandler extends Component {
 
     componentDidMount() {
         this.fetchCompetences();
-        this.fetchApplications("");
+        this.fetchFilteredApplications(this.createFilterPostBody());
     }
 
     /**
      * GETs all the applications from the server.
      */
     fetchApplications() {
-        fetch(server + "/applications",
+        fetch(server + "/applications/filter",
             {credentials: 'include'}
         )
             .then(res => res.json())
@@ -182,7 +182,7 @@ class ApplicationsHandler extends Component {
             return <div id={"listView"}>
                 { this.state.selectedApplications.map((application, index) =>
                     <div id={"listDiv"} key={"l" + application.id} onClick={()=>this.setState({showDetailedView: true, selectedApplication: application},this.applicationDetailedView)}>
-                        <p id={"listText"}>{application.person.name + " " + application.person.surname + ", " + application.date}</p>
+                        <p id={"listName"}>{application.person.name + " " + application.person.surname}</p><p id={"listDate"}>{application.date}</p>
                     </div>)
                 }
                 <p id={"pageNr"}>{(this.state.page + 1) + "/" + this.state.dividedApplications.length}</p>
@@ -214,7 +214,7 @@ class ApplicationsHandler extends Component {
         return (<div id={"filterChoices"}>
             <div>
             <label>
-                <p className="FormText">Available from:</p>
+                <p className="FormText">available from:</p>
                 <input
                     name="fromDate"
                     type="date"
@@ -222,7 +222,7 @@ class ApplicationsHandler extends Component {
                     onChange={this.handleInputChange}/>
             </label>
             <label>
-                <p className="FormText">Available to:</p>
+                <p className="FormText">available to:</p>
                 <input
                     name="toDate"
                     type="date"
@@ -251,7 +251,7 @@ class ApplicationsHandler extends Component {
                 }
             </select>
             <label>
-                Name:
+                name:
                 <input
                     name="name"
                     type="text"
