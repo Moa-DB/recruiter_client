@@ -48,7 +48,9 @@ class Login extends Component{
     }
 
     /**
-     * Checks for errors and then posts the login form to the server. On success sets authenticated to true and adds username in const auth in file
+     * Checks for input errors and then posts the login form to the server. Checks if the user has the right authority.
+     * If not, the user is not allowed to log in.
+     * On success sets authenticated to true and adds username in const auth in file
      * Auth. Displays alert box with error message on fail.
      * @param event
      */
@@ -68,11 +70,14 @@ class Login extends Component{
             .then((response) => {
                 if(!response.ok && response.status === 401) throw new Error("Wrong username or password");
                 else if(!response.ok && response.status === 500) throw new Error("Internal Server Error");
-                else return response;
+                else return response.json();
             })
             .then((data) => {
                 auth.authenticate(() => {
-                    this.setState({ redirectToReferrer: true }, ()=>{auth.user = this.state.username; this.props.history.replace('/applications')});
+                    data.roles[0].name === "recruit" ?
+                    this.setState({ redirectToReferrer: true }, ()=>{auth.user = data.username; this.props.history.replace('/applications')})
+                        :
+                        alert("You are not authorized to use this web site. \n" + "Required authority: recruit \n" + "Your authority: " + data.roles[0].name);
                 });
             })
             .catch((error) => {
@@ -80,6 +85,10 @@ class Login extends Component{
             });
     };
 
+    /**
+     * Handles input from the input fields and updates their corresponding state variables.
+     * @param event
+     */
     handleInputChange(event) {
         const target = event.target;
         const value = target.value;

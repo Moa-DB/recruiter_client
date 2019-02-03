@@ -37,17 +37,6 @@ li{
     padding-top: 1em;
 }
 
-#filterChoices{
-    border-color: black;
-    border-style: solid;
-    border-radius: 1em;
-    width: 30%;
-    padding-bottom: 1em;
-    padding-top: 1em;
-    float: right;
-    margin-right: 4%;
-}
-
 .OuterDiv{
     width: 80%;
     margin: auto;
@@ -59,6 +48,17 @@ li{
 
 .FormText{
     font-weight: bold;
+}
+
+.SideBox{
+    border-color: black;
+    border-style: solid;
+    border-radius: 1em;
+    width: 30%;
+    padding-bottom: 1em;
+    padding-top: 1em;
+    float: right;
+    margin-right: 4%;
 }
 
 #years{
@@ -82,7 +82,7 @@ li{
     width: 30%;
     margin: auto;
     padding: 1em;
-    height: 33em;
+    height: 34em;
     position: relative;
 }
 

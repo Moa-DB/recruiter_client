@@ -4,9 +4,8 @@ import './ApplicationsHandler.css';
 
 
 /**
- * Lets the user create an application in three steps. Step one lets the user choose competence from a drop down list and
- * write number of years in that competence in a input field. Step two lets the user add time periods to the application
- * by giving two dates as input. Step three lets the user view the application and then hand it in or cancel.
+ * Lets the user browse applications in a list with multiple pages, view details about applications and update their status.
+ * A box with search filters lets the user filter applications.
  */
 class ApplicationsHandler extends Component {
     constructor() {
@@ -26,11 +25,11 @@ class ApplicationsHandler extends Component {
             competence: "",
             name: "",
             page: 0,
+            status: 0,
         };
 
         this.fetchApplications = this.fetchApplications.bind(this);
         this.handleInputChange = this.handleInputChange.bind(this);
-        this.handleSelect = this.handleSelect.bind(this);
         this.applicationDetailedView = this.applicationDetailedView.bind(this);
         this.applicationsListView = this.applicationsListView.bind(this);
         this.changeView = this.changeView.bind(this);
@@ -40,12 +39,15 @@ class ApplicationsHandler extends Component {
         this.fetchFilteredApplications = this.fetchFilteredApplications.bind(this);
         this.splitApplicationsList = this.splitApplicationsList.bind(this);
         this.changePage = this.changePage.bind(this);
+        this.putStatus = this.putStatus.bind(this);
+        this.getStatuses = this.getStatuses.bind(this);
+        this.updateStatus = this.updateStatus.bind(this);
 
     }
 
-
     componentDidMount() {
         this.fetchCompetences();
+        this.getStatuses();
         this.fetchFilteredApplications(this.createFilterPostBody());
     }
 
@@ -93,17 +95,50 @@ class ApplicationsHandler extends Component {
             .catch(e => console.log(e))
     }
 
-
     /**
-     * Handles changed selection in the competence selector.
-     * @param event
+     * GETs all statuses.
      */
-    handleSelect(event) {
-        this.setState({competence: event.target.value});
+    getStatuses(){
+        fetch(server + "/statuses",
+            {credentials: 'include'}
+        )
+            .then(res => res.json())
+            .then(data => this.setState({statuses: data, status: data[0].name}))
+            .catch(e => console.log(e))
     }
 
     /**
-     * Handles input from the input fields.
+     * Sends a PUT request to the server to update status of an application.
+     * @param id, id of the application to be updated
+     * @param status, the new status
+     */
+    putStatus(id, status){
+        let api = status;
+        if(status === "ACCEPTED")
+            api = "accept";
+        else if(status === "REJECTED")
+            api = "reject";
+        else if(status === "UNHANDLED")
+            api = "unhandle";
+        else{
+            alert("Unknown status.")
+            return;
+        }
+
+        fetch(server + "/applications/" + id + "/" + api,
+            {
+                credentials: 'include',
+                method: 'PUT',
+            }
+        )
+            .then(res => res.json())
+            .then(data =>
+                this.setState({selectedApplication: data}))
+            .catch(e => console.log(e))
+    }
+
+    /**
+     * Handles input from the input fields and updates their corresponding state variables.
      * @param event
      */
     handleInputChange(event) {
@@ -116,6 +151,20 @@ class ApplicationsHandler extends Component {
         });
     }
 
+    /**
+     * Sets state variables depending on what view shall be rendered.
+     * @param viewName, name of the view that is to be rendered.
+     */
+    changeView(viewName){
+        this.setState({
+            showDetailedView: viewName === "detailed",
+            showApplicationsListView: viewName === "list",
+        })
+    }
+
+    /**
+     * Divides a raw list of applications into a list containing smaller lists representing pages.
+     */
     splitApplicationsList(){
         let i = 0;
         let subList = [];
@@ -123,7 +172,7 @@ class ApplicationsHandler extends Component {
         if(this.state.applications.length > 0){
             this.state.applications.forEach((application, index) =>
                 {
-                    if(index % 15 === 0 && index !== 0){
+                    if(index % 12 === 0 && index !== 0){
                         applicationsList[i] = subList;
                         i++;
                         subList = [];
@@ -136,6 +185,11 @@ class ApplicationsHandler extends Component {
         this.setState({dividedApplications: applicationsList, selectedApplications: applicationsList[0]})
     }
 
+    /**
+     * Updates state variables 'page' to the new page and 'selectedApplications' to the new position in "dividedApplicaitons"
+     * which holds nested lists of applications divided into pages.
+     * @param direction
+     */
     changePage(direction){
         let pageNr = this.state.page;
         if(direction === "+" && pageNr < this.state.dividedApplications.length - 1){
@@ -148,10 +202,13 @@ class ApplicationsHandler extends Component {
     }
 
 
+    /**
+     * Presents the user with a detailed view of the selected application.
+     * @returns {*}
+     */
     applicationDetailedView(){
         let application = this.state.selectedApplication;
         return <div >
-            <p className="FormText">Application</p>
                     <div key={"l" + application.id}>
                         <div id={"showApplication"}>
                             <h2>{application.status.name}</h2>
@@ -177,6 +234,34 @@ class ApplicationsHandler extends Component {
         </div>;
     }
 
+    /**
+     * Presents the user with a drop down list to select a new status for the currently viewed application.
+     * Takes the selected status and calls a fetch method.
+     * @returns {*}
+     */
+    updateStatus(){
+        return(
+            <div className={"SideBox"}>
+                <p className="FormText">change status below:</p>
+                <select name="status" value={this.state.status} onChange={this.handleInputChange}>
+                    { this.state.statuses.map((status) =>
+                        <option
+                            value={status.name}
+                            key={status.name} >{status.name}
+                        </option>)
+                    }
+                </select>
+                <br/>
+                <br/>
+                <button name="changeStatus" onClick={()=>this.putStatus(this.state.selectedApplication.id, this.state.status)} >update status</button>
+            </div>
+        )
+    }
+
+    /**
+     * Iterates trough all applications in the current 'page' of applications and displays them.
+     * @returns {*}
+     */
     applicationsListView(){
         if(this.state.selectedApplications && this.state.selectedApplications.length > 0){
             return <div id={"listView"}>
@@ -193,13 +278,10 @@ class ApplicationsHandler extends Component {
         }
     }
 
-    changeView(viewName){
-        this.setState({
-            showDetailedView: viewName === "detailed",
-            showApplicationsListView: viewName === "list",
-        })
-    }
-
+    /**
+     * Generates Json from state variables for filtered application fetch.
+     * @returns {{name: string, application_date: string, competence: string, from_time: string, to_time: string}}
+     */
     createFilterPostBody(){
         return {
             "name": this.state.name,
@@ -210,8 +292,14 @@ class ApplicationsHandler extends Component {
              }
     }
 
+    /**
+     * Presents the user with a form taking filter parameters to narrow down applications. On submit, a function that
+     * generates a Json request from the state variables associated with the form inputs is triggered, and the result is
+     * posted to the server using fetch.
+     * @returns {*}
+     */
     filterApplications(){
-        return (<div id={"filterChoices"}>
+        return (<div className={"SideBox"}>
             <div>
             <label>
                 <p className="FormText">available from:</p>
@@ -238,7 +326,7 @@ class ApplicationsHandler extends Component {
                     onChange={this.handleInputChange}/>
             </label>
             <p className="FormText">select competence below:</p>
-            <select name="competence" value={this.state.competence} onChange={this.handleSelect}>
+            <select name="competence" value={this.state.competence} onChange={this.handleInputChange}>
                 <option
                     value={"All"}
                     key={"All"} >{"all competences"}
@@ -250,14 +338,17 @@ class ApplicationsHandler extends Component {
                     </option>)
                 }
             </select>
+            <br/>
             <label>
                 name:
+                <br/>
                 <input
                     name="name"
                     type="text"
                     value={this.state.name}
                     onChange={this.handleInputChange}/>
             </label>
+            <br/>
             <br/>
             <button name="filter" onClick={()=>this.fetchFilteredApplications(this.createFilterPostBody())} >search for matching applications</button>
         </div>)
@@ -267,7 +358,9 @@ class ApplicationsHandler extends Component {
         if(this.state.showDetailedView){
             return(
                 <div className={"OuterDiv"}>
+                    {this.updateStatus()}
                     {this.applicationDetailedView()}
+                    <br/>
                     <button name="submit" onClick={()=>this.changeView("list")} >go back to applications list</button>
                 </div>
             )
