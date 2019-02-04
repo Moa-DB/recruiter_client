@@ -26,6 +26,7 @@ class ApplicationsHandler extends Component {
             name: "",
             page: 0,
             status: 0,
+            oldStatus: "",
         };
 
         this.fetchApplications = this.fetchApplications.bind(this);
@@ -42,6 +43,7 @@ class ApplicationsHandler extends Component {
         this.putStatus = this.putStatus.bind(this);
         this.getStatuses = this.getStatuses.bind(this);
         this.updateStatus = this.updateStatus.bind(this);
+        this.updateSelectedApplication = this.updateSelectedApplication.bind(this);
 
     }
 
@@ -79,7 +81,7 @@ class ApplicationsHandler extends Component {
             }
         )
             .then(res => res.json())
-            .then(data => this.setState({applications: data}, ()=>{this.splitApplicationsList()}))
+            .then(data => this.setState({applications: data}, ()=>{this.splitApplicationsList(); this.updateSelectedApplication();}))
             .catch(e => console.log(e))
     }
 
@@ -108,7 +110,10 @@ class ApplicationsHandler extends Component {
     }
 
     /**
-     * Sends a PUT request to the server to update status of an application.
+     * Sends a PUT request to the server to update status of an application. The "oldStatus" state variable is placed in
+     * the body of the request for handling concurrency. If someone else is updating the status of the same application
+     * error 409 will be thrown and the message presented to the user. All applications will also be fetched again to
+     * get the latest version of the current "selectedApplication" and its new status.
      * @param id, id of the application to be updated
      * @param status, the new status
      */
@@ -125,17 +130,51 @@ class ApplicationsHandler extends Component {
             return;
         }
 
+        let requestBody = { "status": this.state.oldStatus.name}
         fetch(server + "/applications/" + id + "/" + api,
             {
                 credentials: 'include',
                 method: 'PUT',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(requestBody),
             }
         )
-            .then(res => res.json())
+            .then((response) => {
+                return response.json();
+            })
+            .then((response) =>
+             {
+                if (!response.ok && response.status === 409) throw new Error(response.message);
+                else if (!response.ok && response.status === 500) throw new Error("Internal Server Error");
+                else return response;
+             })
             .then(data =>
-                this.setState({selectedApplication: data}))
-            .catch(e => console.log(e))
+                this.setState({selectedApplication: data, oldStatus: data.status}))
+            .catch(e => {
+                alert(e.message + "\n \n Please try to update the status again.");
+                this.fetchFilteredApplications(this.createFilterPostBody());
+            })
     }
+
+    /**
+     * Iterates trough all applications and updates the currently viewed application and its status is added to
+     * the state variable "oldStatus".
+     */
+    updateSelectedApplication(){
+        if(!this.state.showDetailedView && !this.selectedApplication)
+            return;
+        this.state.applications.forEach((application, index) =>{
+            if(this.state.selectedApplication.id === application.id){
+                this.setState({selectedApplication: application, oldStatus: application.status})
+            }
+        }
+            )
+    }
+
+
 
     /**
      * Handles input from the input fields and updates their corresponding state variables.
@@ -266,7 +305,7 @@ class ApplicationsHandler extends Component {
         if(this.state.selectedApplications && this.state.selectedApplications.length > 0){
             return <div id={"listView"}>
                 { this.state.selectedApplications.map((application, index) =>
-                    <div id={"listDiv"} key={"l" + application.id} onClick={()=>this.setState({showDetailedView: true, selectedApplication: application},this.applicationDetailedView)}>
+                    <div id={"listDiv"} key={"l" + application.id} onClick={()=>this.setState({showDetailedView: true, selectedApplication: application, oldStatus: application.status},this.applicationDetailedView)}>
                         <p id={"listName"}>{application.person.name + " " + application.person.surname}</p><p id={"listDate"}>{application.date}</p>
                     </div>)
                 }
