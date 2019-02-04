@@ -134,7 +134,7 @@ class ApplicationsHandler extends Component {
         fetch(server + "/applications/" + id + "/" + api,
             {
                 credentials: 'include',
-                method: 'POST',
+                method: 'PUT',
                 headers: {
                     'Accept': 'application/json',
                     'Content-Type': 'application/json'
@@ -152,7 +152,7 @@ class ApplicationsHandler extends Component {
                 else return response;
              })
             .then(data =>
-                this.setState({selectedApplication: data, oldStatus: data.status}))
+                this.fetchFilteredApplications(this.createFilterPostBody()))
             .catch(e => {
                 alert(e.message + "\n \n Please try to update the status again.");
                 this.fetchFilteredApplications(this.createFilterPostBody());
