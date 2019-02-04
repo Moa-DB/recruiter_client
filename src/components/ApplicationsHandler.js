@@ -131,6 +131,7 @@ class ApplicationsHandler extends Component {
         }
 
         let requestBody = { "status": this.state.oldStatus.name}
+        console.log(requestBody)
         fetch(server + "/applications/" + id + "/" + api,
             {
                 credentials: 'include',
