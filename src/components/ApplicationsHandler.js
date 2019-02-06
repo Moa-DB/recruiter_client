@@ -44,6 +44,7 @@ class ApplicationsHandler extends Component {
         this.getStatuses = this.getStatuses.bind(this);
         this.updateStatus = this.updateStatus.bind(this);
         this.updateSelectedApplication = this.updateSelectedApplication.bind(this);
+        this.updateApplicationLists = this.updateApplicationLists.bind(this);
 
     }
 
@@ -151,12 +152,43 @@ class ApplicationsHandler extends Component {
                 else if (!response.ok && response.status === 500) throw new Error("Internal Server Error");
                 else return response;
              })
-            .then(data =>
-                this.fetchFilteredApplications(this.createFilterPostBody()))
+            .then(data =>{
+                this.updateApplicationLists(data);})
             .catch(e => {
                 alert(e.message + "\n \n Please try to update the status again.");
                 this.fetchFilteredApplications(this.createFilterPostBody());
             })
+    }
+
+    /**
+     * Updates all the lists containing applications and replace the old version of the given application.
+     * @param updatedApplication, the application to update the applications lists with.
+     */
+    updateApplicationLists(updatedApplication){
+
+        let applications = this.state.applications;
+        applications.forEach((application) =>{
+            if(application.id === updatedApplication.id){
+                application.status = updatedApplication.status;
+            }
+        });
+
+        let applicationsInPage = this.state.selectedApplications;
+        applicationsInPage.forEach((application) =>{
+            if(applicationsInPage.id === updatedApplication.id){
+                application.status = updatedApplication.status;
+            }
+        });
+
+        let dividedApplications = this.state.dividedApplications;
+        dividedApplications[this.state.page] = applicationsInPage;
+        this.setState({
+            selectedApplication: updatedApplication,
+            oldStatus: updatedApplication.status,
+            applications: applications,
+            selectedApplications: applicationsInPage,
+            dividedApplications: dividedApplications,
+        })
     }
 
     /**
