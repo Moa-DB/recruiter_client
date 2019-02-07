@@ -68,8 +68,9 @@ class Login extends Component{
             body: data,
         })
             .then((response) => {
+                console.log(response)
                 if(!response.ok && response.status === 401) throw new Error("Wrong username or password");
-                else if(!response.ok && response.status === 500) throw new Error("Internal Server Error");
+                else if(!response.ok) throw new Error("Oops! Something went wrong. Please try again in a few minutes.");
                 else return response.json();
             })
             .then((data) => {
@@ -81,7 +82,7 @@ class Login extends Component{
                 });
             })
             .catch((error) => {
-                alert(error)
+                alert(error.message)
             });
     };
 

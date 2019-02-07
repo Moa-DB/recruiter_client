@@ -29,7 +29,6 @@ class ApplicationsHandler extends Component {
             oldStatus: "",
         };
 
-        this.fetchApplications = this.fetchApplications.bind(this);
         this.handleInputChange = this.handleInputChange.bind(this);
         this.applicationDetailedView = this.applicationDetailedView.bind(this);
         this.applicationsListView = this.applicationsListView.bind(this);
@@ -55,18 +54,6 @@ class ApplicationsHandler extends Component {
     }
 
     /**
-     * GETs all the applications from the server.
-     */
-    fetchApplications() {
-        fetch(server + "/applications/filter",
-            {credentials: 'include'}
-        )
-            .then(res => res.json())
-            .then(data => this.setState({applications: data}, ()=>{this.splitApplicationsList()}))
-            .catch(e => console.log(e))
-    }
-
-    /**
      * POSTs a request with filter parameters to receive matching applications in the response.
      */
     fetchFilteredApplications(filterParameters) {
@@ -82,8 +69,13 @@ class ApplicationsHandler extends Component {
             }
         )
             .then(res => res.json())
+            .then((response) =>
+            {
+                if (response.error) throw new Error("Something went wrong. Please try again or reload the page");
+                else return response;
+            })
             .then(data => this.setState({applications: data}, ()=>{this.splitApplicationsList(); this.updateSelectedApplication();}))
-            .catch(e => console.log(e))
+            .catch(e => alert(e.message))
     }
 
     /**
@@ -94,8 +86,13 @@ class ApplicationsHandler extends Component {
             {credentials: 'include'}
         )
             .then(res => res.json())
+            .then((response) =>
+            {
+                if (response.error) throw new Error("Something went wrong. Please reload the page.");
+                else return response;
+            })
             .then(data => this.setState({competences: data}))
-            .catch(e => console.log(e))
+            .catch(e => { alert(e.message);})
     }
 
     /**
@@ -105,9 +102,16 @@ class ApplicationsHandler extends Component {
         fetch(server + "/statuses",
             {credentials: 'include'}
         )
-            .then(res => res.json())
+            .then((response) => {
+                return response.json();
+            })
+            .then((response) =>
+            {
+                if (response.error) throw new Error("Something went wrong. Please reload the page.");
+                else return response;
+            })
             .then(data => this.setState({statuses: data, status: data[0].name}))
-            .catch(e => console.log(e))
+            .catch(e => { alert(e.message);})
     }
 
     /**
@@ -148,15 +152,14 @@ class ApplicationsHandler extends Component {
             })
             .then((response) =>
              {
-                if (!response.ok && response.status === 409) throw new Error(response.message);
-                else if (!response.ok && response.status === 500) throw new Error("Internal Server Error");
+                if ((response.error) && response.status === 409) {this.fetchFilteredApplications(this.createFilterPostBody()); throw new Error(response.message + "\n \n Please try to update the status again.")}
+                else if (response.error) throw new Error("Something went wrong. Please try again or reload the page.");
                 else return response;
              })
             .then(data =>{
                 this.updateApplicationLists(data);})
             .catch(e => {
-                alert(e.message + "\n \n Please try to update the status again.");
-                this.fetchFilteredApplications(this.createFilterPostBody());
+                alert(e.message);
             })
     }
 
